@@ -1,0 +1,41 @@
+name: Quality Workbench
+on: push
+
+jobs:
+  rubocop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: run rubocop
+        run: |
+          bundle exec rubocop
+  rspec:
+    runs-on: ubuntu-latest
+    services:
+      rabbitmq:
+        image: rabbitmq:management
+        ports:
+          - 5672:5672
+          - 15672:15672
+        options: >-
+          --name "rabbitmq"
+          --health-cmd "rabbitmqctl node_health_check"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup RabbitMQ Stuff
+        run: |
+          docker exec rabbitmq rabbitmqctl add_vhost event_source
+          docker exec rabbitmq rabbitmqctl set_permissions -p event_source guest ".*" ".*" ".*"
+          docker exec rabbitmq rabbitmqadmin --vhost "event_source" declare exchange name="users.account_information" type="topic" durable=true
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: run RSpec
+        run: |
+          bundle exec rspec
