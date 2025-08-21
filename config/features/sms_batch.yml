@@ -1,0 +1,15 @@
+registry:
+  - namespace:
+    - :identity_provider_gateway
+    - :sms_communication
+    features:
+      - key: :sms_batching
+        item: :sms_batching
+        is_enabled: <%= ENV['CONTACT_GATEWAY_SMS_BATCHING_IS_ENABLED'] || false %>
+        settings:
+          - key: :sms_batch_capture_start
+            item: "16"
+          - key: :sms_batch_capture_end
+            item: "08"
+          - key: :sms_batch_timezone
+            item: <%= ENV['CONTACT_GATEWAY_TZ'] || 'America/New_York' %>
