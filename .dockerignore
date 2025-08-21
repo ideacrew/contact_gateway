@@ -1,0 +1,10 @@
+.git
+.gitignore
+.github
+.bundle
+.docker
+
+log/*.log
+log/*.log.age
+
+/tmp/
