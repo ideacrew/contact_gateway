@@ -1,5 +1,4 @@
 name: Build Image and Deploy
-
 on:
   workflow_dispatch:
   push:
@@ -8,6 +7,8 @@ on:
   pull_request:
     branches:
       - 'trunk'
+permissions:
+  contents: read
 
 concurrency:
   group: docker-biad-${{ github.ref }}
