@@ -11,5 +11,15 @@ updates:
         applies-to: security-updates
         patterns:
           - "*"
+  - package-ecosystem: "docker"
+    directory: ".docker/production/"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0  
+    groups:
+      security_updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
         
         
