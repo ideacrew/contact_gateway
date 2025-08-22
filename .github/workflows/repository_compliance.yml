@@ -1,8 +1,6 @@
 name: Policy Compliance
 on: push
-permissions:
-  contents: read
-  security-events: read
+permissions: read-all
 
 jobs:
   run-repo-checks:
