@@ -1,9 +1,13 @@
 name: Policy Compliance
 on: push
-permissions: read-all
+permissions:
+  contents: read
+  security-events: read
 
 jobs:
   run-repo-checks:
     runs-on: ubuntu-latest
     steps:
       - uses: TreyE/ic-repo-checks@v0.1.0
+        with:
+          access_token: ${{ secrets.POLICY_COMPLIANCE_TOKEN }}
