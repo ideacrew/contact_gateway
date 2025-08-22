@@ -9,6 +9,7 @@ on:
       - 'trunk'
 permissions:
   contents: read
+  packages: write
 
 concurrency:
   group: docker-biad-${{ github.ref }}
