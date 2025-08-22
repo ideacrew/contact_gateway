@@ -2,9 +2,10 @@ name: Policy Compliance
 on: push
 permissions:
   contents: read
+  security-events: read
 
 jobs:
   run-repo-checks:
     runs-on: ubuntu-latest
-    steps: 
+    steps:
       - uses: TreyE/ic-repo-checks@v0.1.0
