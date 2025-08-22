@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: "bundler"
+    directory: /
+    target-branch: trunk
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0  
+    groups:
+      security_updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+        
+        
