@@ -19,9 +19,23 @@ gem "thruster", require: false
 
 gem "event_source", git: "https://github.com/ideacrew/event_source.git", branch: "trunk"
 gem "resource_registry", git: "https://github.com/ideacrew/resource_registry.git", tag: "v0.10.1"
+gem "aca_entities", git: "https://github.com/ideacrew/aca_entities.git", branch: "trunk"
+
+gem "dry-monads"
+
+gem "phonelib"
+gem "aws-sdk-sns"
+
+gem "sidekiq"
+gem "sidekiq-unique-jobs"
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 # gem "rack-cors"
+
+gem "mongoid"
+
+# Standard Gems
+gem "syslog"
 
 group :development, :test do
   # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
