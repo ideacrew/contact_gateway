@@ -28,13 +28,33 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      mongo:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "echo 'db.runCommand(\"ping\").ok' | mongosh mongodb://localhost:27017/test --quiet"
+          --health-interval 5s
+          --health-timeout 10s
+          --health-retries 10
+          --name "mongo"
+      redis:
+        image: redis:6.2-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --name "redis"
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v2
       - name: Setup RabbitMQ Stuff
         run: |
           docker exec rabbitmq rabbitmqctl add_vhost event_source
           docker exec rabbitmq rabbitmqctl set_permissions -p event_source guest ".*" ".*" ".*"
-          docker exec rabbitmq rabbitmqadmin --vhost "event_source" declare exchange name="users.account_information" type="topic" durable=true
+          docker exec rabbitmq rabbitmqadmin --vhost "event_source" declare exchange name="contact_events.sms_message" type="topic" durable=true
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
