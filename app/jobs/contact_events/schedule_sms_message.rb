@@ -1,6 +1,7 @@
 module ContactEvents
   class ScheduleSmsMessage
     include Sidekiq::Job
+    include EventSource::Command
 
     sidekiq_options lock: :until_executed,
                     on_conflict: :replace,
