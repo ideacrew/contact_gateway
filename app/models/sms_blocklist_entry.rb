@@ -4,6 +4,8 @@ class SmsBlocklistEntry
 
   field :phone_number, type: String
 
+  index({ phone_number: 1 })
+
   validates_presence_of :phone_number, allow_blank: false
 
   def self.search_values(number)
