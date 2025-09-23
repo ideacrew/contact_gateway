@@ -13,12 +13,12 @@ class SmsBatchSchedule
   def next_scheduled_time(the_time)
     adj_time = the_time.in_time_zone(@batch_timezone)
     tomorrow = adj_time.advance(days: 1)
-    tomorrow.change(@batch_capture_cutoff_hour).utc
+    tomorrow.change(hour: @batch_capture_cutoff_hour).utc
   end
 
   def inside_blackout_hours?(the_time)
     return false unless @feature.enabled?
     adj_time = the_time.in_time_zone(@batch_timezone)
-    adj_time.hour >= @batch_capture_begin_hour || adj_time.hour <= @batch_capture_cutoff_hour
+    adj_time.hour >= @batch_capture_begin_hour || adj_time.hour < @batch_capture_cutoff_hour
   end
 end
