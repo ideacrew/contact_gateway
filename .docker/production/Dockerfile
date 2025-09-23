@@ -29,7 +29,7 @@ RUN bundle config set --local without 'development test' && \
 FROM base AS deploy
 
 COPY . $HOME
-COPY ./config/mongoid.yml.production .config/mongoid.yml
+COPY ./config/mongoid.yml.production /contact_gateway/config/mongoid.yml
 
 RUN chown -R nonroot:nonroot $HOME
 
