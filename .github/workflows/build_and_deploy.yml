@@ -179,9 +179,6 @@ jobs:
     if: github.event_name != 'pull_request'
     needs: [prep, build-and-upload-image]
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        registry: ['public.ecr.aws', 'ghcr.io']
     steps:
       - name: Post to a Slack channel
         id: slack
@@ -195,7 +192,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*${{ format('{0} image*:\n`{1}/{2}`', matrix.registry, matrix.registry, needs.prep.outputs.taggedImage) }}"
+                    "text": "*ghcr.io image*:\n`ghcr.io/${{ needs.prep.outputs.taggedImage }}`"
                   }
                 },
                 {
