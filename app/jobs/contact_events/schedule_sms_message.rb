@@ -1,10 +1,11 @@
 module ContactEvents
   class ScheduleSmsMessage
-    include Sidekiq::Job
+    include Sidekiq::Worker
     include EventSource::Command
 
-    sidekiq_options lock: :until_executed,
+    sidekiq_options lock: :until_executing,
                     on_conflict: :replace,
+                    unique_across_queues: true,
                     lock_args_method: :lock_args
 
     def perform(phone, message, timestamp)
