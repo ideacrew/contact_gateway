@@ -132,6 +132,8 @@ jobs:
         with:
           path: cache
           key: ${{ runner.os }}-cache-${{ hashFiles('**/sysdig-cli-scanner', '**/latest_version.txt', '**/db/main.db.meta.json', '**/scanner-cache/inlineScannerCache.db') }}
+          restore-keys: ${{ runner.os }}-cache-
+
       - name: Scan docker image
         if: github.event_name != 'pull_request'
         id: scan
@@ -141,7 +143,8 @@ jobs:
           acs-report-enable: true
           fail-build: false
           severity-cutoff: critical
-      - name: Download sysdig scanner if needed and scan the image
+
+      - name: Download sysdig-cli-scanner if needed and scan the image with sysdig scanner
         env:
           SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
         run: |
@@ -160,7 +163,45 @@ jobs:
             --console-log \
             --dbpath="${GITHUB_WORKSPACE}/cache/db/" \
             --cachepath="${GITHUB_WORKSPACE}/cache/scanner-cache/"
+
+      - name: Upload anchore scan SARIF report
+        if: github.event_name != 'pull_request'
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: ${{ steps.scan.outputs.sarif }}
+
       - name: Move cache
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  notify-slack:
+    if: github.event_name != 'pull_request'
+    needs: [prep, build-and-upload-image]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        registry: ['public.ecr.aws', 'ghcr.io']
+    steps:
+      - name: Post to a Slack channel
+        id: slack
+        uses: slackapi/slack-github-action@v1.16.0
+        with:
+          channel-id: 'docker-images-${{ needs.prep.outputs.repositoryName }}'
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*${{ format('{0} image*:\n`{1}/{2}`', matrix.registry, matrix.registry, needs.prep.outputs.taggedImage) }}"
+                  }
+                },
+                {
+                  "type": "divider"
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.YELLR_BOT_TOKEN }}
