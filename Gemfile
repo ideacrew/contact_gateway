@@ -28,6 +28,7 @@ gem "aws-sdk-sns"
 
 gem "sidekiq"
 gem "sidekiq-unique-jobs"
+gem "sidekiq-scheduler"
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 # gem "rack-cors"

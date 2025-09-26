@@ -8,8 +8,8 @@ registry:
         is_enabled: <%= ENV['CONTACT_GATEWAY_SMS_BATCHING_IS_ENABLED'] || false %>
         settings:
           - key: :sms_batch_capture_start
-            item: "16"
+            item: <%= ENV['CONTACT_GATEWAY_SMS_BATCH_CAPTURE_START'] || "21" %>
           - key: :sms_batch_capture_end
-            item: "08"
+            item: <%= ENV['CONTACT_GATEWAY_SMS_BATCH_CAPTURE_END'] || "07" %>
           - key: :sms_batch_timezone
             item: <%= ENV['CONTACT_GATEWAY_TZ'] || 'America/New_York' %>

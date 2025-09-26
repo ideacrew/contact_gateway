@@ -32,8 +32,16 @@ describe TransmitSmsMessage, "given a valid, unblocked message, not during a bla
     allow(SmsBlocklistEntry).to receive(:blocks?).with(phone_number).and_return false
   end
 
+  let(:expected_transmission_properties) do
+    {
+      message: "A test message",
+      message_attributes: { "submitted_at" => { data_type: "String", string_value: the_time.iso8601 } },
+      phone_number: "+11234567890"
+    }
+  end
+
   it "transmits immediately" do
-    expect_any_instance_of(Aws::SNS::Client).to receive(:publish).with({ message: "A test message", phone_number: "+11234567890" })
+    expect_any_instance_of(Aws::SNS::Client).to receive(:publish).with(expected_transmission_properties)
     expect(result.success?).to be_truthy
     expect(result.success).to eq :published
   end
