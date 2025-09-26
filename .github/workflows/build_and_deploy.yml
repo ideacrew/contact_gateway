@@ -126,12 +126,31 @@ jobs:
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
           build-args: |
             HOSTNAME=172.17.0.1
-
-      - name: Setup cache
+      - name: Check Sysdig CLI Version
+        run: |
+          mkdir -p cache
+          curl -sL -o "${GITHUB_WORKSPACE}/cache/sysdig_latest_version.txt" https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt
+      - name: Sysdig CLI Binary Cache
+        uses: actions/cache@v4
+        id: sysdig-cli-binary-cache
+        with:
+          path: cache/sysdig-cli-scanner
+          key: ${{ runner.os }}-cache-${{ hashFiles('**/sysdig_latest_version.txt') }}
+      - name: Download Sysdig CLI Binary
+        if: steps.sysdig-cli-binary-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -sL -o "${GITHUB_WORKSPACE}/cache/sysdig-cli-scanner" "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(cat ${GITHUB_WORKSPACE}/cache/sysdig_latest_version.txt)/linux/amd64/sysdig-cli-scanner"
+          chmod +x "${GITHUB_WORKSPACE}/cache/sysdig-cli-scanner"
+      - name: Setup Sysdig DB Cache
         uses: actions/cache@v4
         with:
-          path: cache
-          key: ${{ runner.os }}-cache-${{ hashFiles('**/sysdig-cli-scanner', '**/latest_version.txt', '**/db/main.db.meta.json', '**/scanner-cache/inlineScannerCache.db') }}
+          path: cache/db
+          key: ${{ runner.os }}-cache-
+      - name: Setup Sysdig Scanner Cache
+        uses: actions/cache@v4
+        with:
+          path: cache/scanner-cache
+          key: ${{ runner.os }}-cache-
       - name: Scan docker image
         if: github.event_name != 'pull_request'
         id: scan
@@ -141,19 +160,10 @@ jobs:
           acs-report-enable: true
           fail-build: false
           severity-cutoff: critical
-      - name: Download sysdig scanner if needed and scan the image
+      - name: Scan the image with Sysdig
         env:
           SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
         run: |
-          curl -sLO https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt
-          mkdir -p "${GITHUB_WORKSPACE}/cache/db/"
-          if [ ! -f "${GITHUB_WORKSPACE}/cache/latest_version.txt" ] || [ "$(cat ./latest_version.txt)" != "$(cat ${GITHUB_WORKSPACE}/cache/latest_version.txt)" ]; then
-            cp ./latest_version.txt "${GITHUB_WORKSPACE}/cache/latest_version.txt"
-            curl -sL -o "${GITHUB_WORKSPACE}/cache/sysdig-cli-scanner" "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(cat ${GITHUB_WORKSPACE}/cache/latest_version.txt)/linux/amd64/sysdig-cli-scanner"
-            chmod +x "${GITHUB_WORKSPACE}/cache/sysdig-cli-scanner"
-          else
-            echo "Latest version of sysdig cli scanner is already downloaded"
-          fi
           ${GITHUB_WORKSPACE}/cache/sysdig-cli-scanner \
             --apiurl "${SYSDIG_SECURE_ENDPOINT}" \
             ${{ format('{0}/{1}', needs.prep.outputs.registryGhcr, needs.prep.outputs.taggedImage) }} \
@@ -164,3 +174,31 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  notify-slack:
+    if: github.event_name != 'pull_request'
+    needs: [prep, build-and-upload-image]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to a Slack channel
+        id: slack
+        uses: slackapi/slack-github-action@v1.16.0
+        with:
+          channel-id: 'docker-images-${{ needs.prep.outputs.repositoryName }}'
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*ghcr.io image*:\n`ghcr.io/${{ needs.prep.outputs.taggedImage }}`"
+                  }
+                },
+                {
+                  "type": "divider"
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.YELLR_BOT_TOKEN }}
